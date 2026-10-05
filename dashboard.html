@@ -152,22 +152,27 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
   </section>
   <aside>
     <div class="panel">
-      <h2>⚙️ Configurações Buffer</h2>
-      <div class="form-group">
-        <label>Access Token</label>
-        <input type="password" id="buffer-token" placeholder="vvVgr3t0pHeyj_..." value="">
-      </div>
-      <div class="form-group">
-        <label>Modo de postagem padrão</label>
-        <select id="buffer-mode">
-          <option value="shareNow">Postar agora</option>
-          <option value="shareNext">Próximo no queue</option>
-          <option value="addToQueue">Adicionar ao queue</option>
-          <option value="customScheduled">Agendar</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" style="width:100%" onclick="saveConfig()">Salvar configurações</button>
-    </div>
+          <h2>⚙️ Configurações Buffer</h2>
+          <div class="form-group">
+            <label>GitHub Token (PAT)</label>
+            <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" value="">
+            <small style="color: var(--muted); font-size: 11px;">Crie em github.com/settings/tokens → scopes: repo</small>
+          </div>
+          <div class="form-group">
+            <label>Buffer Access Token</label>
+            <input type="password" id="buffer-token" placeholder="vvVgr3t0pHeyj_..." value="">
+          </div>
+          <div class="form-group">
+            <label>Modo de postagem padrão</label>
+            <select id="buffer-mode">
+              <option value="shareNow">Postar agora</option>
+              <option value="shareNext">Próximo no queue</option>
+              <option value="addToQueue">Adicionar ao queue</option>
+              <option value="customScheduled">Agendar</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="saveConfig()">Salvar configurações</button>
+        </div>
     <div class="panel" style="margin-top:16px">
       <h2>📋 Logs</h2>
       <div class="logs" id="logs"></div>
@@ -233,6 +238,7 @@ const TAGS = "#Duelverse #YuGiOh #WebcamDuel\nduelverse.site";
 let videos = [];
 let currentVideo = null;
 let bufferToken = localStorage.getItem("buffer_token") || "vvVgr3t0pHeyj_wp9crROtFzAsg5nfuF8DXGIBRmyXc";
+let githubToken = localStorage.getItem("github_token") || "";
 let defaultMode = localStorage.getItem("buffer_mode") || "shareNow";
 
 // ─── DOM ───
@@ -247,6 +253,7 @@ const postModal = document.getElementById("post-modal");
 
 // ─── Init ───
 document.getElementById("buffer-token").value = bufferToken;
+document.getElementById("github-token").value = githubToken;
 document.getElementById("buffer-mode").value = defaultMode;
 loadVideos();
 setupUpload();
@@ -265,7 +272,7 @@ async function ghRequest(path, options = {}) {
   const resp = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
-      "Authorization": `Bearer ${GITHUB_TOKEN}`,
+      "Authorization": `Bearer ${githubToken}`,
       "Accept": "application/vnd.github+json",
       "Content-Type": "application/json",
       ...options.headers
@@ -581,8 +588,10 @@ async function postToBuffer(videoUrl, description, channel, mode) {
 // ─── Config ───
 function saveConfig() {
   bufferToken = document.getElementById("buffer-token").value;
+  githubToken = document.getElementById("github-token").value;
   defaultMode = document.getElementById("buffer-mode").value;
   localStorage.setItem("buffer_token", bufferToken);
+  localStorage.setItem("github_token", githubToken);
   localStorage.setItem("buffer_mode", defaultMode);
   log("Configurações salvas", "success");
 }
