@@ -479,8 +479,13 @@ async function renameVideo(oldName, sha, newName) {
 
 async function postToBuffer(videoUrl, description, channel, mode, thumbnailUrl) {
   const text = `🎮 Novo vídeo do Duelverse!\n\n${description}\n\n${TAGS}`;
-  const videoAsset = { video: { url: videoUrl } };
-  if (thumbnailUrl) videoAsset.video.thumbnailUrl = thumbnailUrl;
+  const videoAsset = { 
+    video: { 
+      url: videoUrl,
+      thumbnailOffset: 5000  // 5 seconds into video for thumbnail (supported by Instagram, TikTok, Pinterest)
+    } 
+  };
+  // thumbnailUrl not supported by social networks - use thumbnailOffset instead
   
   let metadata = {};
   if (channel === "instagram") metadata.instagram = { type: "reel", shouldShareToFeed: true };
