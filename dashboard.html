@@ -58,7 +58,15 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
 .status-posted { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid var(--green); }
 .status-scheduled { background: rgba(0,191,255,0.15); color: var(--blue); border: 1px solid var(--blue); }
 .status-error { background: rgba(255,68,68,0.15); color: var(--red); border: 1px solid var(--red); }
-.video-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.platform-badges { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+.platform-badge {
+  font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 12px;
+  text-transform: uppercase; border: 1px solid;
+}
+.platform-instagram { background: rgba(225,48,108,0.15); color: #e1306c; border-color: #e1306c; }
+.platform-tiktok { background: rgba(255,255,255,0.15); color: #fff; border-color: #fff; }
+.platform-youtube { background: rgba(255,0,0,0.15); color: #ff0000; border-color: #ff0000; }
+.video-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .btn {
   font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 8px 14px;
   border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s;
@@ -72,6 +80,8 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
 .btn-danger:hover { background: #ff6666; }
 .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 .btn-ghost:hover { background: var(--border); color: var(--text); }
+.btn-success { background: var(--green); color: #000; }
+.btn-success:hover { background: #33ff99; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .upload-zone {
   border: 2px dashed var(--border); border-radius: 10px; padding: 32px; text-align: center;
@@ -94,7 +104,7 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
 .log-warning { color: var(--gold); }
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
 .modal.open { display: flex; }
-.modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; }
+.modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 90%; max-width: 600px; }
 .modal h3 { margin-bottom: 16px; color: var(--gold); }
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
@@ -103,10 +113,15 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
   padding: 10px 12px; border-radius: 6px; font-family: var(--mono); font-size: 13px;
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-  outline: none; border-color: var(--gold);
-}
+  outline: none; border-color: var(--gold); }
+.checkbox-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.checkbox-item input { width: 16px; height: 16px; accent-color: var(--gold); }
+.checkbox-item label { font-size: 13px; color: var(--text); cursor: pointer; }
 .empty-state { text-align: center; padding: 48px 16px; color: var(--muted); }
 .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+.posted-platforms { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; font-size: 10px; }
+.posted-tag { padding: 2px 6px; border-radius: 4px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -143,15 +158,7 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
         <input type="password" id="buffer-token" placeholder="vvVgr3t0pHeyj_..." value="">
       </div>
       <div class="form-group">
-        <label>Canal padrão</label>
-        <select id="buffer-channel">
-          <option value="instagram">Instagram (duelverse.site)</option>
-          <option value="tiktok">TikTok (duelverseremote)</option>
-          <option value="youtube">YouTube (Duelverse ygo)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Modo de postagem</label>
+        <label>Modo de postagem padrão</label>
         <select id="buffer-mode">
           <option value="shareNow">Postar agora</option>
           <option value="shareNext">Próximo no queue</option>
@@ -177,19 +184,24 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
       <textarea id="post-description" rows="4" placeholder="Descreva o vídeo..."></textarea>
     </div>
     <div class="form-group">
-      <label>Thumbnail URL (opcional)</label>
-      <input type="url" id="post-thumbnail" placeholder="https://cdn.exemplo.com/thumb.jpg">
+      <label>Plataformas (pode selecionar múltiplas)</label>
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="platform-instagram" value="instagram" checked>
+          <label for="platform-instagram">📷 Instagram (Reels)</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="platform-tiktok" value="tiktok" checked>
+          <label for="platform-tiktok">🎵 TikTok</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="platform-youtube" value="youtube" checked>
+          <label for="platform-youtube">▶️ YouTube (Shorts)</label>
+        </div>
+      </div>
     </div>
     <div class="form-group">
-      <label>Canal</label>
-      <select id="post-channel">
-        <option value="instagram">Instagram</option>
-        <option value="tiktok">TikTok</option>
-        <option value="youtube">YouTube</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Modo</label>
+      <label>Modo de postagem</label>
       <select id="post-mode">
         <option value="shareNow">Postar agora</option>
         <option value="shareNext">Próximo no queue</option>
@@ -198,7 +210,7 @@ main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 14
     </div>
     <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmPost()">Confirmar Postagem</button>
+      <button class="btn btn-primary" onclick="confirmPost()">Confirmar Postagem em Todas</button>
     </div>
   </div>
 </div>
@@ -221,7 +233,6 @@ const TAGS = "#Duelverse #YuGiOh #WebcamDuel\nduelverse.site";
 let videos = [];
 let currentVideo = null;
 let bufferToken = localStorage.getItem("buffer_token") || "vvVgr3t0pHeyj_wp9crROtFzAsg5nfuF8DXGIBRmyXc";
-let defaultChannel = localStorage.getItem("buffer_channel") || "instagram";
 let defaultMode = localStorage.getItem("buffer_mode") || "shareNow";
 
 // ─── DOM ───
@@ -236,7 +247,6 @@ const postModal = document.getElementById("post-modal");
 
 // ─── Init ───
 document.getElementById("buffer-token").value = bufferToken;
-document.getElementById("buffer-channel").value = defaultChannel;
 document.getElementById("buffer-mode").value = defaultMode;
 loadVideos();
 setupUpload();
@@ -272,7 +282,6 @@ async function ghRequest(path, options = {}) {
 async function loadVideos() {
   log("Carregando vídeos do repositório...", "info");
   try {
-    // Get repo contents (videos folder)
     const contents = await ghRequest("/contents/videos");
     videos = contents
       .filter(f => f.type === "file" && /\.(mp4|webm|mov)$/i.test(f.name))
@@ -283,7 +292,8 @@ async function loadVideos() {
         download_url: f.download_url,
         html_url: f.html_url,
         sha: f.sha,
-        status: getStatusFromName(f.name)
+        status: getStatusFromName(f.name),
+        postedPlatforms: getPostedPlatforms(f.name)
       }));
     renderVideos();
     updateStats();
@@ -300,7 +310,6 @@ async function loadVideos() {
 }
 
 async function createVideosFolder() {
-  // Create empty .gitkeep to create folder
   await ghRequest("/contents/videos/.gitkeep", {
     method: "PUT",
     body: JSON.stringify({
@@ -317,6 +326,12 @@ function getStatusFromName(name) {
   return "pending";
 }
 
+function getPostedPlatforms(name) {
+  const match = name.match(/^posted-\d+-([a-z,]+)-(.+)$/);
+  if (match) return match[1].split(",");
+  return [];
+}
+
 function renderVideos() {
   grid.innerHTML = "";
   if (videos.length === 0) {
@@ -327,6 +342,19 @@ function renderVideos() {
   videos.forEach(v => {
     const card = document.createElement("div");
     card.className = "video-card";
+    
+    const platformBadges = v.postedPlatforms.map(p => 
+      `<span class="platform-badge platform-${p}">${p.charAt(0).toUpperCase() + p.slice(1)}</span>`
+    ).join("");
+    
+    const postedInfo = v.postedPlatforms.length > 0 
+      ? `<div class="posted-platforms">${v.postedPlatforms.map(p => 
+          `<span class="posted-tag" style="background:rgba(0,255,136,0.2);color:var(--green);border:1px solid var(--green)">${p} ✓</span>`
+        ).join("")}</div>`
+      : "";
+    
+    const isPosted = v.postedPlatforms.length > 0;
+    
     card.innerHTML = `
       <video class="video-thumb" muted playsinline preload="metadata" src="${v.download_url}"></video>
       <div class="video-info">
@@ -335,9 +363,13 @@ function renderVideos() {
           <span>${formatSize(v.size)}</span>
           <span>${v.name.split(".").pop().toUpperCase()}</span>
         </div>
+        <div class="platform-badges">${platformBadges}</div>
         <span class="status-badge status-${v.status}">${v.status}</span>
+        ${postedInfo}
         <div class="video-actions" style="margin-top:8px">
-          <button class="btn btn-primary" onclick="openPostModal('${v.name}')" ${v.status !== "pending" ? "disabled" : ""}>Postar</button>
+          <button class="btn ${isPosted ? 'btn-success' : 'btn-primary'}" 
+                  onclick="openPostModal('${v.name}')" 
+                  ${isPosted ? '' : ''}>${isPosted ? 'Repostar' : 'Postar'}</button>
           <button class="btn btn-secondary" onclick="window.open('${v.html_url}', '_blank')">Ver no GitHub</button>
           <button class="btn btn-ghost" onclick="downloadVideo('${v.name}')">Baixar</button>
           <button class="btn btn-danger" onclick="deleteVideo('${v.name}', '${v.sha}')">Excluir</button>
@@ -350,7 +382,7 @@ function renderVideos() {
 
 function updateStats() {
   document.getElementById("count-pending").textContent = videos.filter(v => v.status === "pending").length;
-  document.getElementById("count-posted").textContent = videos.filter(v => v.status === "posted").length;
+  document.getElementById("count-posted").textContent = videos.filter(v => v.postedPlatforms.length > 0).length;
   document.getElementById("count-scheduled").textContent = videos.filter(v => v.status === "scheduled").length;
 }
 
@@ -432,8 +464,10 @@ function openPostModal(videoName) {
   currentVideo = videos.find(v => v.name === videoName);
   if (!currentVideo) return;
   document.getElementById("post-description").value = `Novo vídeo do Duelverse!\n\n${currentVideo.name.replace(/\.[^.]+$/, "")}\n\n${TAGS}`;
-  document.getElementById("post-channel").value = defaultChannel;
   document.getElementById("post-mode").value = defaultMode;
+  document.getElementById("platform-instagram").checked = true;
+  document.getElementById("platform-tiktok").checked = true;
+  document.getElementById("platform-youtube").checked = true;
   postModal.classList.add("open");
 }
 
@@ -445,26 +479,42 @@ async function confirmPost() {
   if (!token) { log("Configure o Buffer Access Token primeiro", "error"); return; }
   
   const description = document.getElementById("post-description").value;
-  const thumbnail = document.getElementById("post-thumbnail").value;
-  const channel = document.getElementById("post-channel").value;
   const mode = document.getElementById("post-mode").value;
   
-  closeModal();
-  log(`Postando ${currentVideo.name} no ${channel}...`, "info");
+  const platforms = [];
+  if (document.getElementById("platform-instagram").checked) platforms.push("instagram");
+  if (document.getElementById("platform-tiktok").checked) platforms.push("tiktok");
+  if (document.getElementById("platform-youtube").checked) platforms.push("youtube");
   
-  try {
-    const result = await postToBuffer(currentVideo.download_url, description, channel, mode, thumbnail);
-    if (result.success) {
-      log(`✅ Postado! ID: ${result.post.id}`, "success");
-      // Rename file to mark as posted
-      const newName = `posted-${Date.now()}-${currentVideo.name}`;
-      await renameVideo(currentVideo.name, currentVideo.sha, newName);
-      loadVideos();
-    } else {
-      log(`❌ Falha: ${result.error}`, "error");
+  if (platforms.length === 0) { log("Selecione pelo menos uma plataforma", "warning"); return; }
+  
+  closeModal();
+  log(`Postando ${currentVideo.name} em ${platforms.join(", ")}...`, "info");
+  
+  let allSuccess = true;
+  let postedPlatforms = [];
+  
+  for (const platform of platforms) {
+    try {
+      const result = await postToBuffer(currentVideo.download_url, description, platform, mode);
+      if (result.success) {
+        log(`✅ ${platform}: Postado! ID: ${result.post.id}`, "success");
+        postedPlatforms.push(platform);
+      } else {
+        log(`❌ ${platform}: ${result.error}`, "error");
+        allSuccess = false;
+      }
+    } catch (e) {
+      log(`❌ ${platform}: ${e.message}`, "error");
+      allSuccess = false;
     }
-  } catch (e) {
-    log(`❌ Erro: ${e.message}`, "error");
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  
+  if (postedPlatforms.length > 0) {
+    const newName = `posted-${Date.now()}-${postedPlatforms.join(",")}-${currentVideo.name}`;
+    await renameVideo(currentVideo.name, currentVideo.sha, newName);
+    loadVideos();
   }
 }
 
@@ -473,19 +523,16 @@ async function renameVideo(oldName, sha, newName) {
     method: "DELETE",
     body: JSON.stringify({ message: `Mark as posted: ${oldName}`, sha, branch: "main" })
   });
-  // Note: GitHub doesn't support rename directly, so we delete and re-add
-  // For simplicity, we just delete. The file stays in history.
 }
 
-async function postToBuffer(videoUrl, description, channel, mode, thumbnailUrl) {
+async function postToBuffer(videoUrl, description, channel, mode) {
   const text = `🎮 Novo vídeo do Duelverse!\n\n${description}\n\n${TAGS}`;
   const videoAsset = { 
     video: { 
       url: videoUrl,
-      thumbnailOffset: 5000  // 5 seconds into video for thumbnail (supported by Instagram, TikTok, Pinterest)
+      thumbnailOffset: 5000
     } 
   };
-  // thumbnailUrl not supported by social networks - use thumbnailOffset instead
   
   let metadata = {};
   if (channel === "instagram") metadata.instagram = { type: "reel", shouldShareToFeed: true };
@@ -534,16 +581,14 @@ async function postToBuffer(videoUrl, description, channel, mode, thumbnailUrl) 
 // ─── Config ───
 function saveConfig() {
   bufferToken = document.getElementById("buffer-token").value;
-  defaultChannel = document.getElementById("buffer-channel").value;
   defaultMode = document.getElementById("buffer-mode").value;
   localStorage.setItem("buffer_token", bufferToken);
-  localStorage.setItem("buffer_channel", defaultChannel);
   localStorage.setItem("buffer_mode", defaultMode);
   log("Configurações salvas", "success");
 }
 
 // ─── Auto-refresh ───
-setInterval(loadVideos, 60000); // refresh every minute
+setInterval(loadVideos, 60000);
 </script>
 </body>
 </html>
