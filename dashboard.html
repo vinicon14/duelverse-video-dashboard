@@ -37,6 +37,14 @@
 </header>
 
 <div id="status" class="status">Carregando vídeos do GitHub...</div>
+<div id="postPanel" class="post-section" style="display:none">
+  <h2>📤 Postar para Buffer</h2>
+  <div class="post-row"><label>Vídeo:</label><select id="videoSelect"></select><label>Canal:</label><select id="channelSelect"><option value="6ac4005f6a5c39ccb6245183">TikTok (duelverseremote)</option><option value="6abff42cea19ca0bde57436c">Instagram (duelverse.site)</option><option value="6abefc10ea19ca0bde4c91d9">YouTube (Duelverse ygo)</option></select></div>
+  <textarea id="postText" rows="2">Duelverse de Hoje — Chain • Priority • Spell Speed • Timing. Jogue em duelverse.site 🎴</textarea>
+  <div class="post-row" style="margin-top:0.5rem"><button onclick="sendPost()">Enviar via Buffer</button><button class="secondary" onclick="copyPostPack()">Copiar link + texto (manual)</button></div>
+  <div id="postLog" class="log">Pronto.</div>
+</div>
+
 <div id="grid" class="grid"></div>
 
 <script>
@@ -118,8 +126,26 @@ async function loadVideos() {
   }
 }
 
-// Auto-load
+// Auto-refresh a cada 30s + post panel functions
 loadVideos();
+setInterval(loadVideos, 30000);
+function postSelected(){ document.getElementById("postPanel").style.display="block"; window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"}); }
+async function sendPost(){
+  const f=document.getElementById("videoSelect")?.value||"duell_correct_final.mp4"; const ch=document.getElementById("channelSelect")?.value||"6ac4005f6a5c39ccb6245183";
+  const txt=document.getElementById("postText")?.value||"Duelverse de Hoje — Chain • Priority • Spell Speed • Timing.";
+  const log=document.getElementById("postLog"); if(!log) return;
+  log.textContent="Enviando via Buffer...";
+  try{
+    const m="mutation { createPost(input: {channelId: \""+ch+"\", mode: \"video\", schedulingType: \"now\", text: \""+txt.replace(/"/g,"'")+"\", assets: [{video: {url: \"https://raw.githubusercontent.com/vinicon14/duelverse-video-dashboard/main/videos/"+f+"\", thumbnailUrl: \"https://raw.githubusercontent.com/vinicon14/duelverse-video-dashboard/main/videos/"+f+"\"}}]}) { id } }";
+    const r=await fetch("https://api.buffer.com/graphql",{method:"POST",headers:{"Authorization":"Bearer vvVgr3t0pHeyj_wp9crROtFzAsg5nfuF8DXGIBRmyXc","Content-Type":"application/json"},body:JSON.stringify({query:m})});
+    const d=await r.json(); log.textContent=d.errors?"Erro Buffer (verifique token).":"Post enviado — verifique Buffer."; log.style.color=d.errors?"#FF4444":"#00FF88";
+  }catch(e){ log.textContent="Falha de rede / token — copie manualmente."; log.style.color="#FF4444"; }
+}
+function copyPostPack(){
+  const f=document.getElementById("videoSelect")?.value||"duell_correct_final.mp4"; const url="https://raw.githubusercontent.com/vinicon14/duelverse-video-dashboard/main/videos/"+f; const txt=document.getElementById("postText")?.value||"Duelverse de Hoje";
+  navigator.clipboard.writeText(`Vídeo: ${f}\nURL: ${url}\nTexto: ${txt}\nCanal: TikTok/IG/YT`).catch(()=>{});
+  const log=document.getElementById("postLog"); if(log){ log.textContent="Copiado! Cole no Buffer."; log.style.color="#00FF88"; }
+}
 </script>
 </body>
 </html>
