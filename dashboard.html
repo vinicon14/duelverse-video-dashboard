@@ -3,603 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Duelverse Video Dashboard</title>
+<title>Duelverse Video Dashboard — Auto-Update</title>
 <style>
-:root {
-  --bg: #0d0d1a;
-  --card: #161628;
-  --border: #2a2a4a;
-  --gold: #ffd700;
-  --blue: #00bfff;
-  --red: #ff4444;
-  --green: #00ff88;
-  --muted: #8888aa;
-  --text: #eaeaff;
-  --mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: var(--mono);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  padding: 24px;
-}
-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
-}
-h1 { font-size: 28px; font-weight: 700; color: var(--gold); }
-h1 span { color: var(--blue); }
-.stats { display: flex; gap: 16px; }
-.stat { background: var(--card); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; }
-.stat-value { font-size: 24px; font-weight: 700; color: var(--gold); }
-.stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
-main { display: grid; grid-template-columns: 1fr 380px; gap: 24px; max-width: 1400px; }
-@media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
-.panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-.panel h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--blue); display: flex; align-items: center; gap: 8px; }
-.video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.video-card {
-  background: var(--bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
-  transition: transform 0.2s, border-color 0.2s;
-}
-.video-card:hover { transform: translateY(-2px); border-color: var(--gold); }
-.video-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #111; }
-.video-info { padding: 12px; }
-.video-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.video-meta { display: flex; gap: 12px; font-size: 11px; color: var(--muted); margin-bottom: 12px; }
-.video-meta span { display: flex; align-items: center; gap: 4px; }
-.status-badge {
-  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px;
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-}
-.status-pending { background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid var(--gold); }
-.status-posted { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid var(--green); }
-.status-scheduled { background: rgba(0,191,255,0.15); color: var(--blue); border: 1px solid var(--blue); }
-.status-error { background: rgba(255,68,68,0.15); color: var(--red); border: 1px solid var(--red); }
-.platform-badges { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
-.platform-badge {
-  font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 12px;
-  text-transform: uppercase; border: 1px solid;
-}
-.platform-instagram { background: rgba(225,48,108,0.15); color: #e1306c; border-color: #e1306c; }
-.platform-tiktok { background: rgba(255,255,255,0.15); color: #fff; border-color: #fff; }
-.platform-youtube { background: rgba(255,0,0,0.15); color: #ff0000; border-color: #ff0000; }
-.video-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.btn {
-  font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 8px 14px;
-  border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.btn-primary { background: var(--gold); color: #000; }
-.btn-primary:hover { background: #ffed44; transform: scale(1.02); }
-.btn-secondary { background: var(--blue); color: #000; }
-.btn-secondary:hover { background: #33ccff; }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-danger:hover { background: #ff6666; }
-.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-.btn-ghost:hover { background: var(--border); color: var(--text); }
-.btn-success { background: var(--green); color: #000; }
-.btn-success:hover { background: #33ff99; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.upload-zone {
-  border: 2px dashed var(--border); border-radius: 10px; padding: 32px; text-align: center;
-  transition: border-color 0.2s, background 0.2s;
-}
-.upload-zone:hover, .upload-zone.drag { border-color: var(--gold); background: rgba(255,215,0,0.05); }
-.upload-zone input { display: none; }
-.upload-icon { font-size: 32px; margin-bottom: 12px; }
-.upload-text { color: var(--muted); font-size: 13px; }
-.progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 12px; display: none; }
-.progress-bar.fill { display: block; }
-.progress-bar inner { height: 100%; background: var(--gold); width: 0%; transition: width 0.3s; }
-.logs { background: #080814; border: 1px solid var(--border); border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; font-size: 11px; line-height: 1.6; }
-.log-entry { padding: 4px 0; border-bottom: 1px solid var(--border); font-family: var(--mono); }
-.log-entry:last-child { border-bottom: none; }
-.log-time { color: var(--muted); }
-.log-info { color: var(--blue); }
-.log-success { color: var(--green); }
-.log-error { color: var(--red); }
-.log-warning { color: var(--gold); }
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
-.modal.open { display: flex; }
-.modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 90%; max-width: 600px; }
-.modal h3 { margin-bottom: 16px; color: var(--gold); }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-.form-group input, .form-group select, .form-group textarea {
-  width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  padding: 10px 12px; border-radius: 6px; font-family: var(--mono); font-size: 13px;
-}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-  outline: none; border-color: var(--gold); }
-.checkbox-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
-.checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.checkbox-item input { width: 16px; height: 16px; accent-color: var(--gold); }
-.checkbox-item label { font-size: 13px; color: var(--text); cursor: pointer; }
-.empty-state { text-align: center; padding: 48px 16px; color: var(--muted); }
-.empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
-.posted-platforms { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; font-size: 10px; }
-.posted-tag { padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=JetBrains+Mono:wght@400;700&display=swap');
+  :root { --bg:#0D0D1A; --gold:#FFD700; --blue:#00BFFF; --red:#FF4444; --card:#151528; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'JetBrains Mono',monospace; background:var(--bg); color:#EAEAEA; min-height:100vh; padding:2rem 1rem; }
+  header { text-align:center; margin-bottom:2rem; }
+  h1 { font-family:'Orbitron',sans-serif; font-size:2.2rem; color:var(--gold); letter-spacing:2px; text-shadow:0 0 20px rgba(255,215,0,0.3); }
+  .subtitle { color:var(--blue); font-size:0.95rem; margin-top:0.3rem; }
+  .refresh-btn { display:inline-block; background:var(--gold); color:#0D0D1A; border:none; padding:0.6rem 1.2rem; font-family:inherit; font-weight:700; border-radius:6px; cursor:pointer; margin-top:0.8rem; }
+  .refresh-btn:hover { background:#FFE066; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1rem; max-width:1200px; margin:0 auto; }
+  .card { background:var(--card); border:2px solid var(--blue); border-radius:12px; overflow:hidden; transition:transform .15s, border-color .15s; }
+  .card:hover { transform:translateY(-4px); border-color:var(--gold); }
+  .card video { width:100%; height:220px; object-fit:cover; background:#000; display:block; }
+  .card-body { padding:1rem; }
+  .card-body h3 { color:var(--gold); font-family:'Orbitron',sans-serif; font-size:1.05rem; margin-bottom:0.25rem; }
+  .meta { color:#888; font-size:0.8rem; }
+  .badge { display:inline-block; padding:0.15rem 0.5rem; border-radius:4px; font-size:0.75rem; margin-top:0.4rem; }
+  .badge-pro { background:var(--blue); color:#0D0D1A; }
+  .badge-music { background:var(--red); color:#fff; }
+  .badge-intercalado { background:var(--gold); color:#0D0D1A; }
+  .status { text-align:center; color:#888; font-size:0.85rem; margin-top:1rem; min-height:1.2rem; }
+  .error { color:var(--red); }
 </style>
 </head>
 <body>
 <header>
-  <h1>DUELVERSE<span>.site</span> Video Dashboard</h1>
-  <div class="stats">
-    <div class="stat"><div class="stat-value" id="count-pending">0</div><div class="stat-label">Pendentes</div></div>
-    <div class="stat"><div class="stat-value" id="count-posted">0</div><div class="stat-label">Postados</div></div>
-    <div class="stat"><div class="stat-value" id="count-scheduled">0</div><div class="stat-label">Agendados</div></div>
-  </div>
+  <h1>DUELVERSE VIDEO DASHBOARD</h1>
+  <div class="subtitle">Atualiza automaticamente do repositório • Clique para refresh</div>
+  <button class="refresh-btn" onclick="loadVideos()">🔄 Atualizar agora</button>
 </header>
-<main>
-  <section class="panel">
-    <h2>📹 Vídeos</h2>
-    <div class="video-grid" id="video-grid">
-      <div class="empty-state" id="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 12l3 3 5-5"/></svg>
-        <p>Nenhum vídeo encontrado</p>
-        <p style="font-size:12px; margin-top:4px">Faça upload ou adicione vídeos na pasta <code>videos/</code> do repositório</p>
-      </div>
-    </div>
-    <div class="upload-zone" id="upload-zone">
-      <div class="upload-icon">⬆️</div>
-      <p class="upload-text">Arraste vídeos aqui ou clique para selecionar<br><small>MP4, WebM, MOV — máx 500MB por arquivo</small></p>
-      <input type="file" id="file-input" accept="video/mp4,video/webm,video/quicktime" multiple>
-      <div class="progress-bar" id="progress-bar"><div class="inner" id="progress-inner"></div></div>
-    </div>
-  </section>
-  <aside>
-    <div class="panel">
-          <h2>⚙️ Configurações Buffer</h2>
-          <div class="form-group">
-            <label>GitHub Token (PAT)</label>
-            <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" value="">
-            <small style="color: var(--muted); font-size: 11px;">Crie em github.com/settings/tokens → scopes: repo</small>
-          </div>
-          <div class="form-group">
-            <label>Buffer Access Token</label>
-            <input type="password" id="buffer-token" placeholder="vvVgr3t0pHeyj_..." value="">
-          </div>
-          <div class="form-group">
-            <label>Modo de postagem padrão</label>
-            <select id="buffer-mode">
-              <option value="shareNow">Postar agora</option>
-              <option value="shareNext">Próximo no queue</option>
-              <option value="addToQueue">Adicionar ao queue</option>
-              <option value="customScheduled">Agendar</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" style="width:100%" onclick="saveConfig()">Salvar configurações</button>
-        </div>
-    <div class="panel" style="margin-top:16px">
-      <h2>📋 Logs</h2>
-      <div class="logs" id="logs"></div>
-    </div>
-  </aside>
-</main>
 
-<!-- Modal Post Video -->
-<div class="modal" id="post-modal">
-  <div class="modal-content">
-    <h3>Postar no Buffer</h3>
-    <div class="form-group">
-      <label>Descrição / Legenda</label>
-      <textarea id="post-description" rows="4" placeholder="Descreva o vídeo..."></textarea>
-    </div>
-    <div class="form-group">
-      <label>Plataformas (pode selecionar múltiplas)</label>
-      <div class="checkbox-group">
-        <div class="checkbox-item">
-          <input type="checkbox" id="platform-instagram" value="instagram" checked>
-          <label for="platform-instagram">📷 Instagram (Reels)</label>
-        </div>
-        <div class="checkbox-item">
-          <input type="checkbox" id="platform-tiktok" value="tiktok" checked>
-          <label for="platform-tiktok">🎵 TikTok</label>
-        </div>
-        <div class="checkbox-item">
-          <input type="checkbox" id="platform-youtube" value="youtube" checked>
-          <label for="platform-youtube">▶️ YouTube (Shorts)</label>
-        </div>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Modo de postagem</label>
-      <select id="post-mode">
-        <option value="shareNow">Postar agora</option>
-        <option value="shareNext">Próximo no queue</option>
-        <option value="addToQueue">Adicionar ao queue</option>
-      </select>
-    </div>
-    <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmPost()">Confirmar Postagem em Todas</button>
-    </div>
-  </div>
-</div>
+<div id="status" class="status">Carregando vídeos do GitHub...</div>
+<div id="grid" class="grid"></div>
 
 <script>
-// ─── Config ───
-const GITHUB_TOKEN = localStorage.getItem("github_token") || "";
-const REPO_OWNER = "vinicon14";
-const REPO_NAME = "duelverse-video-dashboard";
-const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
-const BUFFER_API = "https://api.buffer.com/graphql";
-const CHANNELS = {
-  tiktok: "6ac4005f6a5c39ccb6245183",
-  instagram: "6abff42cea19ca0bde57436c",
-  youtube: "6abefc10ea19ca0bde4c91d9"
-};
-const TAGS = "#Duelverse #YuGiOh #WebcamDuel\nduelverse.site";
+// Config: repo + pasta
+const REPO = "vinicon14/duelverse-video-dashboard";
+const FOLDER = "videos";
 
-// ─── State ───
-let videos = [];
-let currentVideo = null;
-let bufferToken = localStorage.getItem("buffer_token") || "vvVgr3t0pHeyj_wp9crROtFzAsg5nfuF8DXGIBRmyXc";
-// GitHub PAT: obfuscated to avoid secret scanning (base64 decoded at runtime)
-const _gh_enc = "Z2hwXzhsNjhHRFpqVW1pWG5SS25ya0ozZFlEa09ER213YzFkZ3VzRA==";
-let githubToken = localStorage.getItem("github_token") || atob(_gh_enc);
-let defaultMode = localStorage.getItem("buffer_mode") || "shareNow";
+// Lista manual de arquivos conhecidos (garante exibição mesmo com CORS parcial)
+// O fetch da API GitHub para conteúdo público funciona sem token para listagem básica
+const KNOWN_FILES = [
+  {file:"duelverse_chain_pro_final_with_music.mp4", title:"Chain Resolution PRO (com voz + música)", tag:"pro", extra:"3m38s • 1080p60"},
+  {file:"duelverse_priority_pro_final_with_music.mp4", title:"Priority & Spell Speed PRO", tag:"pro", extra:"2m32s • 1080p60"},
+  {file:"duelverse_timing_pro_final_with_music.mp4", title:"Missing the Timing PRO", tag:"pro", extra:"2m23s • 1080p60"},
+  {file:"duell_today_final_fixed.mp4", title:"Duelverse de Hoje — Manim + bg", tag:"music", extra:"~19s • animação sequencial"},
+  {file:"duelverse_intercalado_final_fixed.mp4", title:"Intercalado (Chain + Priority + Timing)", tag:"intercalado", extra:"~5s • sem overlap"},
+];
 
-// ─── DOM ───
-const grid = document.getElementById("video-grid");
-const emptyState = document.getElementById("empty-state");
-const uploadZone = document.getElementById("upload-zone");
-const fileInput = document.getElementById("file-input");
-const progressBar = document.getElementById("progress-bar");
-const progressInner = document.getElementById("progress-inner");
-const logs = document.getElementById("logs");
-const postModal = document.getElementById("post-modal");
-
-// ─── Init ───
-document.getElementById("buffer-token").value = bufferToken;
-document.getElementById("github-token").value = githubToken;
-document.getElementById("buffer-mode").value = defaultMode;
-loadVideos();
-setupUpload();
-
-// ─── Logging ───
-function log(message, type = "info") {
-  const entry = document.createElement("div");
-  entry.className = `log-entry log-${type}`;
-  entry.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> ${message}`;
-  logs.prepend(entry);
-  if (logs.children.length > 50) logs.lastChild.remove();
+function buildUrl(file) {
+  return `https://raw.githubusercontent.com/${REPO}/main/${FOLDER}/${file}`;
 }
 
-// ─── GitHub API ───
-async function ghRequest(path, options = {}) {
-  const resp = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Authorization": `Bearer ${githubToken}`,
-      "Accept": "application/vnd.github+json",
-      "Content-Type": "application/json",
-      ...options.headers
-    }
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(`${resp.status}: ${err.message || resp.statusText}`);
-  }
-  return resp.json();
-}
-
-// ─── Load Videos ───
-async function loadVideos() {
-  log("Carregando vídeos do repositório...", "info");
-  try {
-    const contents = await ghRequest("/contents/videos");
-    videos = contents
-      .filter(f => f.type === "file" && /\.(mp4|webm|mov)$/i.test(f.name))
-      .map(f => ({
-        name: f.name,
-        path: f.path,
-        size: f.size,
-        download_url: f.download_url,
-        html_url: f.html_url,
-        sha: f.sha,
-        status: getStatusFromName(f.name),
-        postedPlatforms: getPostedPlatforms(f.name)
-      }));
-    renderVideos();
-    updateStats();
-    log(`${videos.length} vídeo(s) encontrado(s)`, "success");
-  } catch (e) {
-    if (e.message.includes("404")) {
-      log("Pasta 'videos/' não existe. Criando...", "warning");
-      await createVideosFolder();
-      loadVideos();
-    } else {
-      log(`Erro ao carregar: ${e.message}`, "error");
-    }
-  }
-}
-
-async function createVideosFolder() {
-  await ghRequest("/contents/videos/.gitkeep", {
-    method: "PUT",
-    body: JSON.stringify({
-      message: "Create videos folder",
-      content: btoa(""),
-      branch: "main"
-    })
-  });
-}
-
-function getStatusFromName(name) {
-  if (name.startsWith("posted-")) return "posted";
-  if (name.startsWith("scheduled-")) return "scheduled";
-  return "pending";
-}
-
-function getPostedPlatforms(name) {
-  const match = name.match(/^posted-\d+-([a-z,]+)-(.+)$/);
-  if (match) return match[1].split(",");
-  return [];
-}
-
-function renderVideos() {
-  grid.innerHTML = "";
-  if (videos.length === 0) {
-    grid.appendChild(emptyState);
-    return;
-  }
-  emptyState.remove();
-  videos.forEach(v => {
-    const card = document.createElement("div");
-    card.className = "video-card";
-    
-    const platformBadges = v.postedPlatforms.map(p => 
-      `<span class="platform-badge platform-${p}">${p.charAt(0).toUpperCase() + p.slice(1)}</span>`
-    ).join("");
-    
-    const postedInfo = v.postedPlatforms.length > 0 
-      ? `<div class="posted-platforms">${v.postedPlatforms.map(p => 
-          `<span class="posted-tag" style="background:rgba(0,255,136,0.2);color:var(--green);border:1px solid var(--green)">${p} ✓</span>`
-        ).join("")}</div>`
-      : "";
-    
-    const isPosted = v.postedPlatforms.length > 0;
-    
-    card.innerHTML = `
-      <video class="video-thumb" muted playsinline preload="metadata" src="${v.download_url}"></video>
-      <div class="video-info">
-        <div class="video-title" title="${v.name}">${v.name}</div>
-        <div class="video-meta">
-          <span>${formatSize(v.size)}</span>
-          <span>${v.name.split(".").pop().toUpperCase()}</span>
-        </div>
-        <div class="platform-badges">${platformBadges}</div>
-        <span class="status-badge status-${v.status}">${v.status}</span>
-        ${postedInfo}
-        <div class="video-actions" style="margin-top:8px">
-          <button class="btn ${isPosted ? 'btn-success' : 'btn-primary'}" 
-                  onclick="openPostModal('${v.name}')" 
-                  ${isPosted ? '' : ''}>${isPosted ? 'Repostar' : 'Postar'}</button>
-          <button class="btn btn-secondary" onclick="window.open('${v.html_url}', '_blank')">Ver no GitHub</button>
-          <button class="btn btn-ghost" onclick="downloadVideo('${v.name}')">Baixar</button>
-          <button class="btn btn-danger" onclick="deleteVideo('${v.name}', '${v.sha}')">Excluir</button>
-        </div>
+function renderCard(fileInfo) {
+  const url = buildUrl(fileInfo.file);
+  const badgeClass = fileInfo.tag === "pro" ? "badge-pro" : fileInfo.tag === "music" ? "badge-music" : "badge-intercalado";
+  const badgeText = fileInfo.tag === "pro" ? "PRO" : fileInfo.tag === "music" ? "HOJE" : "INTERCALADO";
+  return `
+    <div class="card">
+      <video src="${url}" controls poster="${url}" preload="metadata"></video>
+      <div class="card-body">
+        <h3>${fileInfo.title}</h3>
+        <div class="meta">${fileInfo.extra} • ${fileInfo.file}</div>
+        <div><span class="badge ${badgeClass}">${badgeText}</span></div>
+        <div style="margin-top:0.4rem; font-size:0.75rem; color:#aaa;">Raw: <a href="${url}" style="color:var(--blue); word-break:break-all;">github.io/...</a></div>
       </div>
-    `;
-    grid.appendChild(card);
-  });
+    </div>`;
 }
 
-function updateStats() {
-  document.getElementById("count-pending").textContent = videos.filter(v => v.status === "pending").length;
-  document.getElementById("count-posted").textContent = videos.filter(v => v.postedPlatforms.length > 0).length;
-  document.getElementById("count-scheduled").textContent = videos.filter(v => v.status === "scheduled").length;
-}
+async function loadVideos() {
+  const grid = document.getElementById("grid");
+  const status = document.getElementById("status");
+  grid.innerHTML = "";
+  status.textContent = "Buscando na API do GitHub...";
+  status.className = "status";
 
-function formatSize(bytes) {
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + " KB";
-  return (bytes/1024/1024).toFixed(2) + " MB";
-}
-
-// ─── Upload ───
-function setupUpload() {
-  uploadZone.addEventListener("click", () => fileInput.click());
-  uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.classList.add("drag"); });
-  uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag"));
-  uploadZone.addEventListener("drop", e => {
-    e.preventDefault(); uploadZone.classList.remove("drag");
-    handleFiles(e.dataTransfer.files);
-  });
-  fileInput.addEventListener("change", e => handleFiles(e.target.files));
-}
-
-async function handleFiles(files) {
-  const videoFiles = Array.from(files).filter(f => /\.(mp4|webm|mov)$/i.test(f.name));
-  if (videoFiles.length === 0) { log("Nenhum arquivo de vídeo válido", "warning"); return; }
-  
-  for (const file of videoFiles) {
-    if (file.size > 500 * 1024 * 1024) {
-      log(`${file.name}: muito grande (>500MB)`, "error"); continue;
-    }
-    await uploadVideo(file);
-  }
-  loadVideos();
-}
-
-async function uploadVideo(file) {
-  log(`Enviando ${file.name} (${formatSize(file.size)})...`, "info");
-  progressBar.classList.add("fill");
-  
-  const arrayBuffer = await file.arrayBuffer();
-  const base64 = btoa(new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""));
-  
   try {
-    await ghRequest(`/contents/videos/${file.name}`, {
-      method: "PUT",
-      body: JSON.stringify({
-        message: `Add video: ${file.name}`,
-        content: base64,
-        branch: "main"
-      })
-    });
-    log(`${file.name} enviado com sucesso`, "success");
-    progressInner.style.width = "100%";
+    // Tenta listar via API pública (sem auth permite lista básica de conteúdo público)
+    const apiUrl = `https://api.github.com/repos/${REPO}/contents/${FOLDER}`;
+    const resp = await fetch(apiUrl, {method:"GET"});
+    let apiFiles = [];
+    if (resp.ok) {
+      const data = await resp.json();
+      apiFiles = Array.isArray(data) ? data.filter(x => x.name && x.name.endsWith(".mp4")) : [];
+    }
+
+    // Mescla com conhecidos (garante que apareçam mesmo se API falhar)
+    const merged = new Map();
+    for (const k of KNOWN_FILES) merged.set(k.file, k);
+    for (const f of apiFiles) {
+      if (!merged.has(f.name)) {
+        merged.set(f.name, {file:f.name, title:f.name, tag:"novo", extra:f.size?Math.round(f.size/1024/1024)+"MB":"?"});
+      }
+    }
+
+    if (merged.size === 0) {
+      status.textContent = "Nenhum vídeo encontrado. Verifique o repo.";
+      return;
+    }
+
+    status.textContent = `Encontrados ${merged.size} vídeos • Atualizado agora`;
+    for (const item of merged.values()) {
+      grid.insertAdjacentHTML("beforeend", renderCard(item));
+    }
   } catch (e) {
-    log(`Falha no upload: ${e.message}`, "error");
-    throw e;
-  } finally {
-    setTimeout(() => { progressBar.classList.remove("fill"); progressInner.style.width = "0%"; }, 1000);
+    status.textContent = "Erro ao carregar: " + e.message;
+    status.className = "status error";
+    // Fallback: render connus
+    grid.innerHTML = KNOWN_FILES.map(renderCard).join("");
+    status.textContent = "Carregado com fallback (lista local) • API falhou";
   }
 }
 
-async function deleteVideo(name, sha) {
-  if (!confirm(`Excluir "${name}"?`)) return;
-  try {
-    await ghRequest(`/contents/videos/${name}`, {
-      method: "DELETE",
-      body: JSON.stringify({ message: `Delete video: ${name}`, sha, branch: "main" })
-    });
-    log(`${name} excluído`, "success");
-    loadVideos();
-  } catch (e) { log(`Erro ao excluir: ${e.message}`, "error"); }
-}
-
-function downloadVideo(name) {
-  const v = videos.find(v => v.name === name);
-  if (v) window.open(v.download_url, "_blank");
-}
-
-// ─── Buffer Post ───
-function openPostModal(videoName) {
-  currentVideo = videos.find(v => v.name === videoName);
-  if (!currentVideo) return;
-  document.getElementById("post-description").value = `Novo vídeo do Duelverse!\n\n${currentVideo.name.replace(/\.[^.]+$/, "")}\n\n${TAGS}`;
-  document.getElementById("post-mode").value = defaultMode;
-  document.getElementById("platform-instagram").checked = true;
-  document.getElementById("platform-tiktok").checked = true;
-  document.getElementById("platform-youtube").checked = true;
-  postModal.classList.add("open");
-}
-
-function closeModal() { postModal.classList.remove("open"); currentVideo = null; }
-
-async function confirmPost() {
-  if (!currentVideo) return;
-  const token = document.getElementById("buffer-token").value || bufferToken;
-  if (!token) { log("Configure o Buffer Access Token primeiro", "error"); return; }
-  
-  const description = document.getElementById("post-description").value;
-  const mode = document.getElementById("post-mode").value;
-  
-  const platforms = [];
-  if (document.getElementById("platform-instagram").checked) platforms.push("instagram");
-  if (document.getElementById("platform-tiktok").checked) platforms.push("tiktok");
-  if (document.getElementById("platform-youtube").checked) platforms.push("youtube");
-  
-  if (platforms.length === 0) { log("Selecione pelo menos uma plataforma", "warning"); return; }
-  
-  closeModal();
-  log(`Postando ${currentVideo.name} em ${platforms.join(", ")}...`, "info");
-  
-  let allSuccess = true;
-  let postedPlatforms = [];
-  
-  for (const platform of platforms) {
-    try {
-      const result = await postToBuffer(currentVideo.download_url, description, platform, mode);
-      if (result.success) {
-        log(`✅ ${platform}: Postado! ID: ${result.post.id}`, "success");
-        postedPlatforms.push(platform);
-      } else {
-        log(`❌ ${platform}: ${result.error}`, "error");
-        allSuccess = false;
-      }
-    } catch (e) {
-      log(`❌ ${platform}: ${e.message}`, "error");
-      allSuccess = false;
-    }
-    await new Promise(r => setTimeout(r, 1000));
-  }
-  
-  if (postedPlatforms.length > 0) {
-    const newName = `posted-${Date.now()}-${postedPlatforms.join(",")}-${currentVideo.name}`;
-    await renameVideo(currentVideo.name, currentVideo.sha, newName);
-    loadVideos();
-  }
-}
-
-async function renameVideo(oldName, sha, newName) {
-  await ghRequest(`/contents/videos/${oldName}`, {
-    method: "DELETE",
-    body: JSON.stringify({ message: `Mark as posted: ${oldName}`, sha, branch: "main" })
-  });
-}
-
-async function postToBuffer(videoUrl, description, channel, mode) {
-  const text = `🎮 Novo vídeo do Duelverse!\n\n${description}\n\n${TAGS}`;
-  const videoAsset = { 
-    video: { 
-      url: videoUrl,
-      thumbnailOffset: 5000
-    } 
-  };
-  
-  let metadata = {};
-  if (channel === "instagram") metadata.instagram = { type: "reel", shouldShareToFeed: true };
-  else if (channel === "tiktok") metadata.tiktok = { title: description.slice(0, 100) };
-  else if (channel === "youtube") metadata.youtube = { title: description.split("\n")[0] };
-  
-  const mutation = `
-    mutation CreatePost($input: CreatePostInput!) {
-      createPost(input: $input) {
-        ... on PostActionSuccess { post { id text status channel { id service name } } }
-        ... on NotFoundError { message }
-        ... on UnauthorizedError { message }
-        ... on UnexpectedError { message }
-        ... on RestProxyError { message }
-        ... on LimitReachedError { message }
-        ... on InvalidInputError { message }
-      }
-    }
-  `;
-  
-  const variables = {
-    input: {
-      channelId: CHANNELS[channel],
-      mode,
-      schedulingType: "automatic",
-      text,
-      assets: [videoAsset],
-      ...(Object.keys(metadata).length && { metadata })
-    }
-  };
-  
-  const resp = await fetch(BUFFER_API, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ query: mutation, variables })
-  });
-  
-  const data = await resp.json();
-  if (data.errors) throw new Error(JSON.stringify(data.errors));
-  const result = data.data.createPost;
-  if (result.post) return { success: true, post: result.post };
-  if (result.message) return { success: false, error: result.message };
-  return { success: false, error: "Unknown response" };
-}
-
-// ─── Config ───
-function saveConfig() {
-  bufferToken = document.getElementById("buffer-token").value;
-  githubToken = document.getElementById("github-token").value;
-  defaultMode = document.getElementById("buffer-mode").value;
-  localStorage.setItem("buffer_token", bufferToken);
-  localStorage.setItem("github_token", githubToken);
-  localStorage.setItem("buffer_mode", defaultMode);
-  log("Configurações salvas", "success");
-}
-
-// ─── Auto-refresh ───
-setInterval(loadVideos, 60000);
+// Auto-load
+loadVideos();
 </script>
 </body>
 </html>
