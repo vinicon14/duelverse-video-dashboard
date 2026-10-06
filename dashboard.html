@@ -128,7 +128,13 @@ async function loadVideos() {
 
 // Auto-refresh a cada 30s + post panel functions
 loadVideos();
-setInterval(loadVideos, 30000);
+setInterval(loadVideos, 10000); // auto-refresh a cada 10s
+let lastCount = 0;
+function checkNew(current){
+  const s = document.getElementById("status");
+  if(current > lastCount && lastCount > 0){ s.textContent = `✅ ${current} vídeos — NOVO detectado (${new Date().toLocaleTimeString("pt-BR")})`; s.className="status ok"; }
+  lastCount = current;
+}
 function postSelected(){ document.getElementById("postPanel").style.display="block"; window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"}); }
 async function sendPost(){
   const f=document.getElementById("videoSelect")?.value||"duell_correct_final.mp4"; const ch=document.getElementById("channelSelect")?.value||"6ac4005f6a5c39ccb6245183";
